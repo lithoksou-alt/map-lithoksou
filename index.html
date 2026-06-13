@@ -3,70 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Γλωσσογεωγραφικός Άτλας</title>
+    <title>Γλωσσογεωγραφικός Άτλας - Δημήτρης Λιθοξόου</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #ffffff;
-            color: #333333;
-            text-align: center;
-            padding: 60px 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
             margin: 0;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            border: 1px solid #e0e0e0;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        }
-        h1 {
-            font-size: 26px;
-            color: #111111;
-            margin-bottom: 10px;
-        }
-        .subtitle {
-            font-size: 16px;
-            color: #666666;
-            margin-bottom: 40px;
-            font-style: italic;
-        }
-        .menu-links {
+            padding: 50px 20px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            align-items: center;
         }
-        .menu-button {
-            display: block;
-            padding: 18px;
-            background-color: #f8f9fa;
-            color: #0056b3;
-            text-decoration: none;
-            font-weight: bold;
+        .header-container {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 20px;
+            width: 100%;
+            max-width: 700px;
+        }
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 32px;
+            color: #2c3e50;
+            letter-spacing: 0.5px;
+        }
+        .subtitle {
+            margin: 0 0 10px 0;
             font-size: 18px;
-            border: 1px solid #ccd1d9;
-            border-radius: 6px;
-            transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+            color: #555;
+            font-style: italic;
         }
-        .menu-button:hover {
-            background-color: #0056b3;
-            color: #ffffff;
-            border-color: #0056b3;
+        .author {
+            margin: 0;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .list-container {
+            background: #ffffff;
+            padding: 30px 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 700px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        li {
+            margin-bottom: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        li:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        a {
+            display: block;
+            padding: 12px 15px;
+            text-decoration: none;
+            color: #2980b9;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.2s ease-in-out;
+            border-radius: 4px;
+        }
+        a:hover {
+            background-color: #ecf0f1;
+            color: #1a5276;
+            padding-left: 20px;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Γλωσσογεωγραφικός Άτλας</h1>
-    <div class="subtitle">Ψηφιακή Χαρτογράφηση Διαλεκτικού Υλικού</div>
-    
-    <div class="menu-links">
-        <a href="jaja.html" class="menu-button">1. Η γιαγιά</a>
-        <a href="prosopo.html" class="menu-button">2. Το πρόσωπο</a>
+    <div class="header-container">
+        <h1>Γλωσσογεωγραφικός Άτλας</h1>
+        <p class="subtitle">Ψηφιακή Χαρτογράφηση Διαλεκτικού Υλικού</p>
+        <p class="author">Δημήτρης Λιθοξόου</p>
     </div>
-</div>
+
+    <div class="list-container">
+        <ul>
+            <li><a href="jaja.html">1. η γιαγιά - the grandmother - i jaja</a></li>
+            <li><a href="prosopo.html">2. το πρόσωπο - the face - to prosopo</a></li>
+            <li><a href="fotja.html">3. η φωτιά - the fire - i fotja</a></li>
+        </ul>
+    </div>
 
 </body>
 </html>
