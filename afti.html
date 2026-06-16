@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Γλωσσογεωγραφικός Άτλας: αυτί</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; padding: 0; background-color: #ebe6dd; }
+        #map { width: 100vw; height: 100vh; background-color: #ebe6dd; }
+        
+        .word-label { 
+            font-family: 'Verdana', sans-serif; 
+            background: transparent; 
+            border: none; 
+            box-shadow: none; 
+            font-size: 11px; 
+            line-height: 1.2; 
+            text-align: center; 
+            white-space: nowrap; 
+        }
+        
+        .settlement-tooltip { 
+            font-family: 'Verdana', sans-serif; 
+            background: transparent; 
+            border: none; 
+            box-shadow: none; 
+            color: #4a4a4a; 
+            font-weight: bold; 
+            font-size: 10px; 
+            text-shadow: 1px 1px 2px white, -1px -1px 2px white; 
+        }
+        .leaflet-tooltip-top:before { display: none; }
+        
+        .custom-legend { font-family: 'Verdana', sans-serif; background-color: rgba(255, 255, 255, 0.95); padding: 8px 10px; border-radius: 5px; font-size: 11px; border: 1px solid #ccc; line-height: 1.4; max-height: 92vh; overflow-y: auto; max-width: 240px; position: relative; }
+        .legend-toggle { float: right; cursor: pointer; font-weight: bold; color: #555; margin-left: 10px; font-size: 12px; user-select: none; }
+        .legend-content { margin-top: 5px; }
+        
+        .export-button {
+            position: absolute;
+            top: 80px; 
+            left: 10px;
+            z-index: 1000;
+            background: white;
+            border: 2px solid rgba(0,0,0,0.2);
+            border-radius: 4px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-family: 'Verdana', sans-serif;
+            font-size: 11px;
+            font-weight: bold;
+            color: #333;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+        }
+        .export-button:hover { background: #f4f4f4; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
+</head>
+<body>
+
+    <button class="export-button" onclick="exportMapAsImage()">Export</button>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="greece.js"></script>
+    <script src="cyprus.js"></script>
+    <script>
+        var map = L.map('map', { zoomSnap: 0.25, zoomDelta: 0.25 }).setView([38.5, 23.5], 6);
+
+        if (typeof greeceData !== 'undefined') { L.geoJSON(greeceData, { style: { color: "gray", weight: 1, fillOpacity: 0 } }).addTo(map); }
+        if (typeof cyprusData !== 'undefined') { L.geoJSON(cyprusData, { style: { color: "gray", weight: 1, fillOpacity: 0 } }).addTo(map); }
+
+        var settlementsLayer = L.layerGroup().addTo(map);
+        var wordsLayer = L.layerGroup().addTo(map);
+
+        // Γεωγραφικές Συντεταγμένες Οικισμών (Με αντιστροφή σε [Latitude, Longitude])
+        var locations = {
+            "Αγιά": { lat: 39.71889467037154, lon: 22.75854588636552 },
+            "Αγία Άννα": { lat: 37.77672928454535, lon: 21.63641845043999 },
+            "Αγία Ευθυμία": { lat: 38.47979757231371, lon: 22.35836413215388 },
+            "Αγία Παρασκευή": { lat: 40.22095540943239, lon: 21.77406063974075 },
+            "Άγιος": { lat: 38.90526539544371, lon: 23.05868737691443 },
+            "Άγιος Αρσένιος": { lat: 37.06138559942879, lon: 25.39090780040893 },
+            "Άγιος Βασίλειος": { lat: 35.0341410308354, lon: 25.45935027731685 },
+            "Άγιος Γεώργιος": { lat: 35.16592830409007, lon: 25.48388116471523 },
+            "Άγιος Δημήτριος Ζακύνθου": { lat: 37.79923871583935, lon: 20.79856029846974 },
+            "Άγιος Δημήτριος Ηλείας": { lat: 37.8990098, lon: 21.40876080000002 },
+            "Άγιος Λουκάς": { lat: 38.44191178339217, lon: 24.02521197050906 },
+            "Άγιος Νικόλαος": { lat: 38.63742812031033, lon: 21.4583376195341 },
+            "Άγιος Νικόλαος*": { lat: 35.32899630224915, lon: 33.6767084698679 },
+            "Αγρίδι": { lat: 37.76537317932769, lon: 22.15054010562847 },
+            "Αλποχώρι": { lat: 37.73395659676008, lon: 21.37412359879566 },
+            "Αμπελιώνα": { lat: 37.43549537410856, lon: 21.94873559319911 },
+            "Αμφίκλεια": { lat: 38.63905830000001, lon: 22.59279460000002 },
+            "Ανάφη": { lat: 36.35034921397286, lon: 25.76641135234548 },
+            "Ανατολή": { lat: 35.0453679366783, lon: 25.64269255562287 },
+            "Άνω Σύρος": { lat: 37.4508272305059, lon: 24.93565321866279 },
+            "Ανώγεια": { lat: 35.29061598064897, lon: 24.88237197030206 },
+            "Απείραθος": { lat: 37.07100377534336, lon: 25.51914832076027 },
+            "Απολλωνία": { lat: 36.97306907579357, lon: 24.72377625790943 },
+            "Αργοστόλι": { lat: 38.17208997536147, lon: 20.48965466843306 },
+            "Αρχαία Φενεός": { lat: 37.91687586232294, lon: 22.29664872101912 },
+            "Ασπρογερακάτα": { lat: 38.78288360015454, lon: 20.65263530551636 },
+            "Βαλύρα": { lat: 37.16149226289768, lon: 21.98218940855578 },
+            "Βεργαδαίικα": { lat: 37.22785716560375, lon: 22.26273794151439 },
+            "Βουλγάρω": { lat: 35.45425383617545, lon: 23.6988056213354 },
+            "Βουρλιώτες": { lat: 37.78516090852089, lon: 26.84761328721613 },
+            "Βράχα": { lat: 39.06525230175185, lon: 21.80131687062989 },
+            "Βραχάσι": { lat: 35.27297576392345, lon: 25.56424951436983 },
+            "Βρέσθενα": { lat: 37.22625830213155, lon: 22.49660475169198 },
+            "Γάιος": { lat: 39.19673756885662, lon: 20.18454408076857 },
+            "Γέρμας": { lat: 40.45175186526029, lon: 21.42881809274616 },
+            "Γουριά": { lat: 38.47312290145717, lon: 21.26037740581867 },
+            "Γραμματικού": { lat: 38.52776600000001, lon: 21.50552010000002 },
+            "Γυμνό": { lat: 37.77668647199097, lon: 22.57420776293968 },
+            "Δαύλεια": { lat: 38.51467710233154, lon: 22.7316192502157 },
+            "Δελβινάκι": { lat: 39.93107623245074, lon: 20.4640124972762 },
+            "Δολιανά": { lat: 37.38990172867955, lon: 22.49948487989915 },
+            "Δολό": { lat: 39.99305600835238, lon: 20.44000484592883 },
+            "Δράκεια": { lat: 39.37665281016591, lon: 23.04824457614653 },
+            "Δραμεσιοί": { lat: 39.54984669859711, lon: 20.76682880469063 },
+            "Δρυμώνας": { lat: 38.77108275481012, lon: 20.62691046942495 },
+            "Ελάτη": { lat: 37.62696376632544, lon: 22.14846207884376 },
+            "Έμπα": { lat: 34.80413758802056, lon: 32.42345804883156 },
+            "Εμπρόσνερος": { lat: 35.34465240618535, lon: 24.18757148701485 },
+            "Έξω Γωνιά": { lat: 36.3891018098526, lon: 25.4589282156938 },
+            "Εξωχώρι": { lat: 36.90035153607261, lon: 22.27062174799062 },
+            "Ερεικούσα": { lat: 39.87960234184784, lon: 19.57885178399724 },
+            "Ζάκυνθος": { lat: 37.78460589818038, lon: 20.89719606378082 },
+            "Θαλάμες": { lat: 36.78506380001963, lon: 22.32956309944179 },
+            "Θεοδώρα": { lat: 35.34446318906025, lon: 24.86353765194164 },
+            "Καλιπάδο": { lat: 37.80088856767065, lon: 20.83811355722613 },
+            "Καλούσι": { lat: 38.03512124431, lon: 21.79932206965671 },
+            "Κανάλια": { lat: 39.39887579019921, lon: 21.80054901812359 },
+            "Κανδήλα": { lat: 37.77272229617439, lon: 22.37997324803885 },
+            "Καραβάς*": { lat: 35.3450857514183, lon: 33.20754318256392 },
+            "Καρδακάτα": { lat: 38.28001108756332, lon: 20.46964286950685 },
+            "Καρίτσα": { lat: 38.80382019368116, lon: 21.72410432341584 },
+            "Καρυά": { lat: 37.63956171781977, lon: 22.54551794487207 },
+            "Κατούνα": { lat: 38.78084117638263, lon: 20.70670264373941 },
+            "Κάτω Λουσοί": { lat: 37.99309581286794, lon: 22.1389859563127 },
+            "Κελλάρια": { lat: 35.13911225821036, lon: 26.22467895723345 },
+            "Κέρτεζη": { lat: 37.97940696885784, lon: 21.99336926353545 },
+            "Κίμωλος": { lat: 36.79277883011866, lon: 24.5747975606517 },
+            "Κιλελέρ": { lat: 39.50360061175523, lon: 22.64026892832563 },
+            "Κοιλιωμένος": { lat: 37.74754768183268, lon: 20.77423747345724 },
+            "Κορωνίδα": { lat: 37.14562640625508, lon: 25.52969228719833 },
+            "Κουμαρίτσι": { lat: 38.77228290085907, lon: 22.37516010175228 },
+            "Κρέστενα": { lat: 37.59185592084302, lon: 21.62011297744169 },
+            "Λαγκάδια": { lat: 37.68209405784817, lon: 22.03075949279621 },
+            "Λαμπιώτες": { lat: 35.21319881234987, lon: 24.68566365928825 },
+            "Λεβίδι": { lat: 37.68191894177972, lon: 22.29526667065987 },
+            "Λέκα": { lat: 37.773125, lon: 26.68823333 },
+            "Ληξούρι": { lat: 38.19871893523158, lon: 20.43773028433755 },
+            "Λιλαία": { lat: 38.63360253654748, lon: 22.49575020763438 },
+            "Λυγουριό": { lat: 37.61265981823196, lon: 23.04040747015594 },
+            "Μαθράκι": { lat: 39.76169855787131, lon: 19.52577459812052 },
+            "Μακρινή": { lat: 38.4337240841357, lon: 22.123853146591 },
+            "Μακρολίβαδο": { lat: 39.03690748186766, lon: 22.41946765117362 },
+            "Μάρθα": { lat: 35.07458363446485, lon: 25.35797586144223 },
+            "Μασχολούρι": { lat: 39.34654462935725, lon: 22.08768370658508 },
+            "Μαχαιράδο": { lat: 37.75818124164354, lon: 20.81004706299045 },
+            "Μέγαρα": { lat: 37.9943201089941, lon: 23.34304962168897 },
+            "Μελισσουργοί": { lat: 39.5080509570525, lon: 21.1475853309449 },
+            "Μεσούντα": { lat: 39.34234304012281, lon: 21.33330769234619 },
+            "Μηλίνα": { lat: 39.17292874142925, lon: 23.22242714634337 },
+            "Μικρό Βουνό": { lat: 39.45588529472146, lon: 22.25670019969187 },
+            "Μονοπολάτα": { lat: 38.22908076761502, lon: 20.39046447377821 },
+            "Μυγδαλιά": { lat: 37.74737600281399, lon: 22.07813546745229 },
+            "Νεοχώρι": { lat: 37.43507693012939, lon: 21.6573857347985 },
+            "Νησάκι": { lat: 39.72461673599572, lon: 19.89129074278085 },
+            "Οθωνοί": { lat: 39.84175439065651, lon: 19.40560895598603 },
+            "Πάγοι": { lat: 39.70792996169273, lon: 19.70237276130958 },
+            "Πάκια": { lat: 36.79094764764416, lon: 22.85111955333323 },
+            "Παλαιοχώρα": { lat: 35.2296839207149, lon: 23.68145529565198 },
+            "Πάνω Λεύκαρα": { lat: 34.86735348684937, lon: 33.30533452485306 },
+            "Πέρα Μέλανα": { lat: 37.21352152121177, lon: 22.88323886170463 },
+            "Πηγή": { lat: 40.06809313582686, lon: 20.78600380138485 },
+            "Πιάνα": { lat: 37.57624424612336, lon: 22.23794859396797 },
+            "Πλατύστομο": { lat: 38.96978980000001, lon: 22.11970140000002 },
+            "Πραστός": { lat: 37.26366100441828, lon: 22.68334355543452 },
+            "Πρέβεζα": { lat: 38.95939935782929, lon: 20.75247324086629 },
+            "Προάστιο": { lat: 36.87572938617038, lon: 22.25404227432719 },
+            "Πύργος": { lat: 36.37865841358732, lon: 25.45020558829949 },
+            "Ραψάνη": { lat: 39.90192860804054, lon: 22.54780279359417 },
+            "Ροεινό": { lat: 37.57839612903856, lon: 22.28706252843184 },
+            "Ροζενά": { lat: 38.11978997857242, lon: 22.396974545093 },
+            "Ρούτσι": { lat: 37.34676054763018, lon: 22.19328096806638 },
+            "Σαρακίνι": { lat: 37.53347440757683, lon: 21.99259578901243 },
+            "Σέλλες": { lat: 35.32143887993266, lon: 25.72152184120221 },
+            "Σιάτιστα": { lat: 40.25872164451181, lon: 21.55089118357191 },
+            "Σιρίλι": { lat: 35.49663202451632, lon: 23.82010794907383 },
+            "Σκεπαστό": { lat: 38.04042317752398, lon: 22.07385418336198 },
+            "Σκινέας": { lat: 38.24267020113937, lon: 20.39328262825558 },
+            "Σκριπερό": { lat: 39.70042835114884, lon: 19.77406327886863 },
+            "Σπαρτιά": { lat: 37.9801262752677, lon: 21.79156383633625 },
+            "Σταγιάδες": { lat: 39.85013384584003, lon: 21.45218253361849 },
+            "Σταυροδρόμι": { lat: 39.93334460045241, lon: 20.41224503127662 },
+            "Στεμνίτσα": { lat: 37.5562400601188, lon: 22.08258710991327 },
+            "Στροφυλιά": { lat: 38.81997770040378, lon: 23.40939559270647 },
+            "Τιθορέα": { lat: 38.58434280814244, lon: 22.66788421516386 },
+            "Τριοβάσαλος": { lat: 36.74493714010985, lon: 24.43340602487859 },
+            "Τρόπαια": { lat: 37.73242939953357, lon: 21.95924289276316 },
+            "Τσαμαντάς": { lat: 39.7767121, lon: 20.34769199999999 },
+            "Τσέρια": { lat: 36.91826064808468, lon: 22.26686833835483 },
+            "Τύλισος": { lat: 35.29656545501977, lon: 25.01844214132916 },
+            "Τυρός": { lat: 37.25003788311527, lon: 22.8564386438461 },
+            "Φενεός": { lat: 37.9527453897575, lon: 22.323752771621 },
+            "Φισκάρδο": { lat: 38.4595419615089, lon: 20.57618273196402 },
+            "Φολέγανδρος": { lat: 36.62791719292451, lon: 24.9193229634296 },
+            "Χουλιαράδες": { lat: 39.54949446410028, lon: 21.00670284854937 },
+            "Χρυσή": { lat: 40.27468736305975, lon: 20.97467847171738 },
+            "Χρυσοβίτσα": { lat: 38.57370200694552, lon: 21.70213590151381 },
+            "Ωραιόκαστρο": { lat: 39.98775363809744, lon: 20.55227276179086 }
+        };
+
+        // Λεξικό Χρωμάτων - Ποιοτική επιλογή
+        var colors = {
+            "το αυτί": "#e31a1c",
+            "του αυτί": "#800026",
+            "του αυτσί": "#d7301f",
+            "το φτι": "#662506",
+            "του φτι": "#993404",
+            "το φτιν": "#cc4c02",
+            "του φτσι": "#7f0000",
+            "α αβοτάνα": "#dd3497",
+            "α αβουτάνα": "#ae017e",
+            "η ακοή": "#41ab5d"
+        };
+
+        // Λεξικό Αντιστοίχισης IPA
+        var ipaTranslation = {
+            "α αβοτάνα": "a avoˈtana",
+            "α αβουτάνα": "a avuˈtana",
+            "η ακοή": "i akoˈi",
+            "του αυτί": "tu afˈti",
+            "το αυτί": "to afˈti",
+            "του αυτσί": "tu afˈtsi",
+            "το φτι": "to ˈfti",
+            "του φτι": "tu ˈfti",
+            "το φτιν": "to ˈftin",
+            "του φτσι": "tu ˈftsi"
+        };
+
+        // Πρωτογενής Κατανομή Δεδομένων
+        var wordMappings = [
+            { words: ["α αβοτάνα", "α αβουτάνα"], settlements: ["Πέρα Μέλανα", "Πραστός", "Τυρός"] },
+            { words: ["η ακοή", "το φτι"], settlements: ["Μέγαρα"] },
+            { words: ["του αυτί"], settlements: ["Αγιά", "Αγία Ευθυμία", "Αγία Παρασκευή", "Άγιος", "Άγιος Νικόλαος", "Αμφίκλεια", "Βουρλιώτες", "Βράχα", "Γουριά", "Γραμματικού", "Δαύλεια", "Δολό", "Δράκεια", "Δραμεσιοί", "Κανάλια", "Καρίτσα", "Κιλελέρ", "Κουμαρίτσι", "Λέκα", "Λιλαία", "Μακρινή", "Μακρολίβαδο", "Μασχολούρι", "Μελισσουργοί", "Μεσούντα", "Μικρό Βουνό", "Πλατύστομο", "Πρέβεζα", "Ραψάνη", "Σιάτιστα", "Στροφυλιά", "Τιθορέα", "Χουλιαράδες", "Χρυσή", "Χρυσοβίτσα"] },
+            { words: ["το αυτί"], settlements: ["Αγία Άννα", "Άγιος Αρσένιος", "Άγιος Βασίλειος", "Άγιος Γεώργιος", "Άγιος Δημήτριος Ζακύνθου", "Άγιος Δημήτριος Ηλείας", "Άγιος Λουκάς", "Αγρίδι", "Αλποχώρι", "Αμπελιώνα", "Ανατολή", "Ανάφη", "Άνω Σύρος", "Ανώγεια", "Απείραθος", "Απολλωνία", "Αργοστόλι", "Αρχαία Φενεός", "Ασπρογερακάτα", "Βαλύρα", "Βεργαδαίικα", "Βουλγάρω", "Βραχάσι", "Βρέσθενα", "Γάιος", "Γυμνό", "Δελβινάκι", "Δολιανά", "Δρυμώνας", "Ελάτη", "Εμπρόσνερος", "Έξω Γωνιά", "Εξωχώρι", "Ερεικούσα", "Ζάκυνθος", "Θαλάμες", "Θεοδώρα", "Καλιπάδο", "Καλούσι", "Κανδήλα", "Καρδακάτα", "Καρυά", "Κατούνα", "Κάτω Λουσοί", "Κελλάρια", "Κέρτεζη", "Κίμωλος", "Κοιλιωμένος", "Κορωνίδα", "Κρέστενα", "Λαγκάδια", "Λαμπιώτες", "Λεβίδι", "Ληξούρι", "Λυγουριό", "Μαθράκι", "Μάρθα", "Μαχαιράδο", "Μονοπολάτα", "Μυγδαλιά", "Νεοχώρι", "Νησάκι", "Οθωνοί", "Πάγοι", "Πάκια", "Παλαιοχώρα", "Πηγή", "Πιάνα", "Προάστιο", "Πύργος", "Ροεινό", "Ροζενά", "Ρούτσι", "Σαρακίνι", "Σέλλες", "Σιρίλι", "Σκεπαστό", "Σκινέας", "Σκριπερό", "Σπαρτιά", "Σταυροδρόμι", "Στεμνίτσα", "Τριοβάσαλος", "Τρόπαια", "Τσαμαντάς", "Τσέρια", "Τύλισος", "Φενεός", "Φισκάρδο", "Φολέγανδρος", "Ωραιόκαστρο"] },
+            { words: ["του αυτσί", "του φτσι"], settlements: ["Σιάτιστα"] },
+            { words: ["του φτι"], settlements: ["Αμφίκλεια", "Μηλίνα", "Σταγιάδες"] },
+            { words: ["το φτιν"], settlements: ["Άγιος Νικόλαος*", "Έμπα", "Καραβάς*", "Πάνω Λεύκαρα"] }
+        ];
+
+        var settlementData = {};
+        wordMappings.forEach(function(mapping) {
+            mapping.settlements.forEach(function(settlementName) {
+                if (!settlementData[settlementName]) { settlementData[settlementName] = []; }
+                mapping.words.forEach(function(word) {
+                    if (!settlementData[settlementName].includes(word)) { settlementData[settlementName].push(word); }
+                });
+            });
+        });
+
+        // Σχεδιασμός οικισμών
+        for (var settlementName in settlementData) {
+            if (locations[settlementName]) {
+                var lat = locations[settlementName].lat;
+                var lon = locations[settlementName].lon;
+                var wordsArray = settlementData[settlementName];
+                
+                L.circleMarker([lat, lon], { radius: 4, fillColor: "#999999", color: "#999999", weight: 1, fillOpacity: 1 }).addTo(settlementsLayer)
+                 .bindTooltip(settlementName, { permanent: true, direction: 'top', offset: [0, -5], className: 'settlement-tooltip' });
+
+                var wordsHTML = '<div style="text-align: center; line-height: 1.2;">';
+                wordsArray.forEach(function(word) {
+                    var color = colors[word] || "#000000";
+                    var ipaStr = ipaTranslation[word] ? ipaTranslation[word] : "";
+                    
+                    var shadow = "-1px -1px 0 #ffffff, 0 -1px 0 #ffffff, 1px -1px 0 #ffffff, -1px 0 0 #ffffff, 1px 0 0 #ffffff, -1px 1px 0 #ffffff, 0 1px 0 #ffffff, 1px 1px 0 #ffffff";
+                    
+                    wordsHTML += '<span style="color: ' + color + '; text-shadow: ' + shadow + '; display: block; font-weight: bold; font-style: italic;">' + word + '</span>';
+                    if (ipaStr) {
+                        wordsHTML += '<span style="color: ' + color + '; text-shadow: ' + shadow + '; display: block; font-size: 11px; font-weight: bold; font-style: normal; margin-top: 1px; opacity: 0.95;">' + ipaStr + '</span>';
+                    }
+                });
+                wordsHTML += '</div>';
+
+                L.marker([lat, lon], { icon: L.divIcon({ className: 'word-label', html: wordsHTML, iconSize: [200, null], iconAnchor: [100, -8] }) }).addTo(wordsLayer);
+            }
+        }
+
+        var overlays = { "Settlements": settlementsLayer, "Variants": wordsLayer };
+        L.control.layers(null, overlays, { collapsed: false }).addTo(map);
+
+        var legend = L.control({position: 'bottomright'});
+        legend.onAdd = function (map) {
+            var div = L.DomUtil.create('div', 'custom-legend');
+            div.innerHTML = '<span class="legend-toggle" id="legendToggle" onclick="toggleLegend()">[-]</span>' +
+                            '<div style="text-align: center; font-weight: bold; font-size:11px;">linguistic atlas<br>Dhimitris Lithoksou</div>' +
+                            '<div class="legend-content" id="legendContent">' +
+                            '<div style="text-align: center; margin-bottom:10px; font-size:11px;">[ear] [αυτί] [afˈti]</div></div>';
+            
+            var contentDiv = div.querySelector('#legendContent');
+            var groupedColors = {};
+            for (var word in colors) {
+                var hex = colors[word];
+                if (!groupedColors[hex]) { groupedColors[hex] = []; }
+                var ipa = ipaTranslation[word] ? " (" + ipaTranslation[word] + ")" : "";
+                groupedColors[hex].push(word + ipa);
+            }
+            for (var hex in groupedColors) {
+                contentDiv.innerHTML += '<div style="margin-bottom: 2px; text-align: left;"><i style="background:' + hex + '; width:11px; height:11px; display:inline-block; margin-right:5px; border:1px solid #000; vertical-align: middle;"></i>' + groupedColors[hex].join(', ') + '</div>';
+            }
+            return div;
+        };
+        legend.addTo(map);
+
+        function toggleLegend() {
+            var content = document.getElementById('legendContent');
+            var toggle = document.getElementById('legendToggle');
+            if (content.style.display === 'none') { content.style.display = 'block'; toggle.innerHTML = '[-]'; }
+            else { content.style.display = 'none'; toggle.innerHTML = '[+]'; }
+        }
+
+        function exportMapAsImage() {
+            var mapElement = document.getElementById('map');
+            domtoimage.toPng(mapElement, {
+                width: mapElement.clientWidth,
+                height: mapElement.clientHeight
+            })
+            .then(function (dataUrl) {
+                var link = document.createElement('a');
+                link.download = 'atlas_export.png';
+                link.href = dataUrl;
+                link.click();
+            })
+            .catch(function (error) {
+                alert('Σφάλμα κατά την εξαγωγή της εικόνας: ' + error);
+            });
+        }
+    </script>
+</body>
+</html>
